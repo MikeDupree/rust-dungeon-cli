@@ -1,3 +1,4 @@
+use std::fmt::write;
 use std::io;
 use std::io::Read;
 use std::io::{stdin, stdout, Stdin, Write};
@@ -61,38 +62,22 @@ fn main() {
             Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => panic!("Channel disconnected"),
         }
+
+        let mut screen_output = String::from("");
         for row in 0..terminal_size.1 - 3 {
             for col in 0..terminal_size.0 {
                 if interface::is_wall(row, col) {
-                    write!(stdout, "\x1b[33m#\x1b[0m").unwrap();
+                    screen_output.push_str("\x1b[33m#\x1b[0m")
                 } else if player.collides(row, col) {
-                    //todo use the inst
-                    player.render();
+                    screen_output.push_str(player.render());
                 } else {
-                    write!(stdout, " ").unwrap();
+                    screen_output.push_str(" ");
                 }
             }
         }
-
-        sleep(500);
+        println!("{}", screen_output);
+        sleep(100);
     }
-    /*write!(stdout, " ").unwrap();
-
-        writeln!(stdout, "{:?}", terminal_size).unwrap();
-        //detecting keydown events
-        for c in stdin.keys() {
-            //i reckon this speaks for itself
-            Player::detect_input(&c.as_ref().unwrap());
-            match c.unwrap() {
-                Key::Ctrl('h') => println!("Hello world!"),
-                Key::Ctrl('q') => break,
-                Key::Alt('t') => println!("termion is cool"),
-                _ => (),
-            }
-
-    //        stdout.flush().unwrap();
-        }
-        */
 }
 
 fn spawn_stdin_channel() -> Receiver<Key> {
@@ -100,10 +85,8 @@ fn spawn_stdin_channel() -> Receiver<Key> {
     thread::spawn(move || loop {
         let stdin = stdin();
         for c in stdin.keys() {
-            print!("key {:?}", c); //i reckon this speaks for itself
             tx.send(c.unwrap()).unwrap();
             break;
-            //        stdout.flush().unwrap();
         }
     });
     rx
