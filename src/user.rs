@@ -1,6 +1,4 @@
 use std::time::Instant;
-
-use event_system::create_event_system;
 use termion::event::Key;
 
 // Player.rs

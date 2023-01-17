@@ -6,6 +6,7 @@ use std::thread::sleep;
 use std::time::{Duration, Instant, SystemTime};
 use std::{thread, time};
 
+use enemy::Enemy;
 use event_system::create_event_system;
 
 use termion;
@@ -33,8 +34,12 @@ fn main() {
     // TODO issue: 1.1 register handle_input
     //render_event.register_key_down(player.handle_input);
 
-    let mut enemy = enemy::Enemy::create();
-
+    // spawn enemies
+    let mut enemies: Vec<Enemy> = vec![];
+    let max_enemies = 50;
+    for n in 0..max_enemies {
+        enemies.push(Enemy::create());
+    }
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
     let mut last_updated = Instant::now();
@@ -56,29 +61,26 @@ fn main() {
         }
 
         // Update State
-        if update(&mut player, &mut enemy, last_updated) {
+        if update(&mut player, &mut enemies) {
             last_updated = Instant::now();
         }
 
         // Render Screen
-        render(&player, &mut enemy, do_render);
+        render(&player, &mut enemies, do_render);
     }
 }
 
-fn update(player: &mut user::Player, enemy: &mut enemy::Enemy, last_updated: Instant) -> bool {
-    let mut did_render = false;
+fn update(player: &mut user::Player, enemies: &mut Vec<Enemy>) -> bool {
     player.update();
-    if last_updated.elapsed().as_millis() >= 350 {
-        // Enemy Movement
-        // refactor: Handle enemy movement via event or something
-        enemy.move_towards(player.pos, last_updated);
-        did_render = true;
+    // Enemy Movement
+    // refactor: Handle enemy movement via event or something
+    for enemy in enemies {
+        enemy.move_towards(player.pos);
     }
-
-    did_render
+    true
 }
 
-fn render(player: &user::Player, enemy: &mut enemy::Enemy, do_render: bool) {
+fn render(player: &user::Player, enemies: &mut Vec<Enemy>, do_render: bool) {
     //setting up stdout and going into raw mode
     let mut stdout = stdout().into_raw_mode().unwrap();
     let terminal_size = termion::terminal_size().unwrap();
@@ -92,10 +94,17 @@ fn render(player: &user::Player, enemy: &mut enemy::Enemy, do_render: bool) {
                 screen_output.push_str(player.render());
             } else if player.base_attack_collides(row, col) {
                 screen_output.push_str(player.render_base_attack());
-            } else if enemy.collides(row, col) {
-                screen_output.push_str(enemy.render());
             } else {
-                screen_output.push_str(" ");
+                let mut enemy_rendered = false;
+                for enemy in &mut *enemies {
+                    if enemy.collides(row, col) {
+                        screen_output.push_str(enemy.render());
+                        enemy_rendered = true;
+                    }
+                }
+                if !enemy_rendered {
+                    screen_output.push_str(" ");
+                }
             }
         }
     }
