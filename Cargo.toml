@@ -12,3 +12,7 @@ termion-input-tokio = "0.3.0"
 tokio = "1.24.1"
 event_system = "0.1.1"
 rand = "0.8.5"
+
+[dependencies.uuid]
+version = "1.2.2"
+features = ["v4", "fast-rng", "macro-diagnostics"]

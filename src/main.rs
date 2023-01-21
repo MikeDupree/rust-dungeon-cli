@@ -13,6 +13,7 @@ use termion;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
+use uuid::Uuid;
 
 mod enemy;
 mod interface;
@@ -24,6 +25,7 @@ create_event_system! {
         key: Key,
     }
 }
+
 const MS_PER_UPDATE: u32 = 15000;
 fn main() {
     let do_render = true;
@@ -36,9 +38,9 @@ fn main() {
 
     // spawn enemies
     let mut enemies: Vec<Enemy> = vec![];
-    let max_enemies = 50;
+    let max_enemies = 200;
     for n in 0..max_enemies {
-        enemies.push(Enemy::create());
+        enemies.push(Enemy::create(Uuid::new_v4()));
     }
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
@@ -74,8 +76,9 @@ fn update(player: &mut user::Player, enemies: &mut Vec<Enemy>) -> bool {
     player.update();
     // Enemy Movement
     // refactor: Handle enemy movement via event or something
+    let enemies_clone = &(enemies.clone());
     for enemy in enemies {
-        enemy.move_towards(player.pos);
+        enemy.move_towards(player.pos, enemies_clone);
     }
     true
 }
@@ -100,6 +103,7 @@ fn render(player: &user::Player, enemies: &mut Vec<Enemy>, do_render: bool) {
                     if enemy.collides(row, col) {
                         screen_output.push_str(enemy.render());
                         enemy_rendered = true;
+                        break;
                     }
                 }
                 if !enemy_rendered {
