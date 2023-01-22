@@ -1,14 +1,16 @@
+use enemy::Enemy;
+use event_system::create_event_system;
+use spawner::Spawner;
+use std::cell::{RefCell, RefMut};
 use std::io::{stdin, stdout, Stdout, Write};
-use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
+use std::rc::Rc;
 use std::sync::mpsc::TryRecvError;
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{mpsc, MutexGuard};
+use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, Instant, SystemTime};
 use std::{thread, time};
-
-use enemy::Enemy;
-use event_system::create_event_system;
-
 use termion;
 use termion::event::Key;
 use termion::input::TermRead;
@@ -17,19 +19,12 @@ use uuid::Uuid;
 
 mod enemy;
 mod interface;
+mod spawner;
 mod user;
-
-create_event_system! {
-    RenderEvent
-    KeyDown {
-        key: Key,
-    }
-}
 
 const MS_PER_UPDATE: u32 = 15000;
 fn main() {
     let do_render = true;
-    let mut render_event = RenderEvent::new();
 
     //stdout.flush().unwrap();
     let mut player = user::Player::create();
@@ -37,11 +32,10 @@ fn main() {
     //render_event.register_key_down(player.handle_input);
 
     // spawn enemies
-    let mut enemies: Vec<Enemy> = vec![];
-    let max_enemies = 200;
-    for n in 0..max_enemies {
-        enemies.push(Enemy::create(Uuid::new_v4()));
-    }
+    let (position_update_tx, position_update_rx) = std::sync::mpsc::channel();
+    let mut spawner = Arc::new(Mutex::new(Spawner::new(4)));
+    let spawner_clone = spawner.clone();
+
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
     let mut last_updated = Instant::now();
@@ -63,27 +57,23 @@ fn main() {
         }
 
         // Update State
-        if update(&mut player, &mut enemies) {
+        if update(&mut player, &position_update_tx) {
+            println!("Calling pos update");
+            position_update_tx.send(player.pos).unwrap();
             last_updated = Instant::now();
         }
 
         // Render Screen
-        render(&player, &mut enemies, do_render);
+        render(&player, &spawner_clone.lock().unwrap(), do_render);
     }
 }
 
-fn update(player: &mut user::Player, enemies: &mut Vec<Enemy>) -> bool {
+fn update(player: &mut user::Player, position_update_tx: &Sender<(u16, u16)>) -> bool {
     player.update();
-    // Enemy Movement
-    // refactor: Handle enemy movement via event or something
-    let enemies_clone = &(enemies.clone());
-    for enemy in enemies {
-        enemy.move_towards(player.pos, enemies_clone);
-    }
     true
 }
 
-fn render(player: &user::Player, enemies: &mut Vec<Enemy>, do_render: bool) {
+fn render(player: &user::Player, spawner: &Spawner, do_render: bool) {
     //setting up stdout and going into raw mode
     let mut stdout = stdout().into_raw_mode().unwrap();
     let terminal_size = termion::terminal_size().unwrap();
@@ -99,7 +89,7 @@ fn render(player: &user::Player, enemies: &mut Vec<Enemy>, do_render: bool) {
                 screen_output.push_str(player.render_base_attack());
             } else {
                 let mut enemy_rendered = false;
-                for enemy in &mut *enemies {
+                for enemy in &spawner.enemies {
                     if enemy.collides(row, col) {
                         screen_output.push_str(enemy.render());
                         enemy_rendered = true;
@@ -115,17 +105,30 @@ fn render(player: &user::Player, enemies: &mut Vec<Enemy>, do_render: bool) {
 
     if do_render {
         //clearing the screen and going to top left corner
-        write!(
-            stdout,
-            "{}{}",
-            termion::cursor::Goto(1, 1),
-            termion::clear::All
-        )
-        .unwrap();
+        /*write!(
+                stdout,
+                "{}{}",
+                termion::cursor::Goto(1, 1),
+                termion::clear::All
+            )
+            .unwrap();
+        */
         println!("{}", screen_output);
     }
 
     //sleep(100);
+}
+
+fn spawn_stdin_channel() -> Receiver<Key> {
+    let (tx, rx) = mpsc::channel::<Key>();
+    thread::spawn(move || loop {
+        let stdin = stdin();
+        for c in stdin.keys() {
+            tx.send(c.unwrap()).unwrap();
+            break;
+        }
+    });
+    rx
 }
 
 fn spawn_stdin_channel() -> Receiver<Key> {
