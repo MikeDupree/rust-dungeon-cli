@@ -23,10 +23,27 @@ mod spawner;
 mod user;
 
 const MS_PER_UPDATE: u32 = 15000;
+
+struct Stats {
+    xp: u16,
+}
+
+fn control_enemy(stats: &Arc<Mutex<Stats>>) {
+    let stats = Arc::clone(&stats);
+    thread::spawn(move || loop {
+        let mut stats_lock = stats.lock().unwrap();
+        if stats_lock.xp <= 10000 {
+            stats_lock.xp += 100;
+        }
+    });
+}
+
 fn main() {
     let do_render = true;
+    let stats = Arc::new(Mutex::new(Stats { xp: 100 }));
 
-    //stdout.flush().unwrap();
+    control_enemy(&stats);
+
     let mut player = user::Player::create();
     // TODO issue: 1.1 register handle_input
     //render_event.register_key_down(player.handle_input);
@@ -34,12 +51,20 @@ fn main() {
     // spawn enemies
     let (position_update_tx, position_update_rx) = std::sync::mpsc::channel();
     let mut spawner = Arc::new(Mutex::new(Spawner::new(4)));
-    let spawner_clone = spawner.clone();
 
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
     let mut last_updated = Instant::now();
     loop {
+        let stats = Arc::clone(&stats);
+        println!("{:?}", stats.lock().unwrap().xp);
+        match position_update_rx.try_recv() {
+            Ok((x, y)) => {
+                println!("Pos Listener Received: {:?}", (x, y))
+            }
+            Err(TryRecvError::Empty) => (),
+            Err(TryRecvError::Disconnected) => panic!("Channel disconnected"),
+        }
         // Get Input
         match stdin_channel.try_recv() {
             Ok(key) => {
@@ -63,8 +88,9 @@ fn main() {
             last_updated = Instant::now();
         }
 
-        // Render Screen
-        render(&player, &spawner_clone.lock().unwrap(), do_render);
+        // Render screen
+        let spawner_lock = Arc::clone(&spawner);
+        render(&player, &spawner_lock.lock().unwrap(), do_render);
     }
 }
 
@@ -117,18 +143,6 @@ fn render(player: &user::Player, spawner: &Spawner, do_render: bool) {
     }
 
     //sleep(100);
-}
-
-fn spawn_stdin_channel() -> Receiver<Key> {
-    let (tx, rx) = mpsc::channel::<Key>();
-    thread::spawn(move || loop {
-        let stdin = stdin();
-        for c in stdin.keys() {
-            tx.send(c.unwrap()).unwrap();
-            break;
-        }
-    });
-    rx
 }
 
 fn spawn_stdin_channel() -> Receiver<Key> {
