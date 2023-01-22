@@ -40,7 +40,6 @@ impl Spawner {
 pub fn control_swarm(position_update_rx: &Receiver<(u16, u16)>, spawner: Arc<Mutex<Spawner>>) {
     match position_update_rx.try_recv() {
         Ok((x, y)) => {
-            println!("Pos Listener Received: {:?}", (x, y));
             let mut spawner_lock = spawner.lock().unwrap();
             spawner_lock.update_player_pos((x, y));
         }

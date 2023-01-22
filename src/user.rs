@@ -68,6 +68,7 @@ impl Player {
                     _ => (),
                 }
             }
+
             self.attack_render_count += 1;
             self.last_updated = Instant::now();
         }

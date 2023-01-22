@@ -44,6 +44,15 @@ fn main() {
  * Game Update
  */
 fn update(player: &mut user::Player, spawner: &mut Spawner) {
+
+    // Check for attack collision
+
+    for enemy in &mut spawner.enemies {
+        if player.base_attack_collides(enemy.pos.0, enemy.pos.1) {
+            println!("ENEMY HIT");
+            enemy.take_damage(1);
+        }
+    }
     player.update();
     spawner.update_swarm();
 }

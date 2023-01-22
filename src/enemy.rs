@@ -34,6 +34,14 @@ impl Enemy {
         self.pos.0 == col && self.pos.1 == row
     }
 
+    pub fn take_damage(&mut self, dmg: u16) {
+        if self.health > 0 {
+            self.health -= dmg;
+            if self.health == 0 {
+               println!("Enemy Dead");
+            }
+        }
+    }
 
     pub fn move_towards(&mut self, target_pos: (u16, u16)) {
         if self.last_updated.elapsed().as_millis() >= 350 {
@@ -55,10 +63,10 @@ impl Enemy {
 
             // TODO a way for an instance of enemy to know if there is something obstructing it.
             //if self.check_mob_collisions(enemies) {
-                // if new move causes collision with another enemy
-                // revert back to original pos, this enemy doesnt move.
-                // TODO figure out better ai logic for enemy movement
-                // self.pos = current_pos;
+            // if new move causes collision with another enemy
+            // revert back to original pos, this enemy doesnt move.
+            // TODO figure out better ai logic for enemy movement
+            // self.pos = current_pos;
             //}
             self.last_updated = Instant::now();
         }
