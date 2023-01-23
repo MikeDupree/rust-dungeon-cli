@@ -31,7 +31,7 @@ impl Player {
     }
 
     pub fn render(&self) -> &str {
-        "\x1b[92m♟\x1b[0m"
+        "\u{001b}[34;1m♟\u{001b}[0m"
     }
 
     pub fn collides(&self, row: u16, col: u16) -> bool {
@@ -39,7 +39,7 @@ impl Player {
     }
 
     pub fn render_base_attack(&self) -> &str {
-        "\x1b[92m*\x1b[0m"
+        "\u{001b}[37;1m•\u{001b}[0m"
     }
 
     pub fn base_attack_collides(&self, row: u16, col: u16) -> bool {

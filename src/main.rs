@@ -15,7 +15,7 @@ fn main() {
 
     // spawn enemies
     let (position_update_tx, position_update_rx) = std::sync::mpsc::channel();
-    let spawner = Arc::new(Mutex::new(Spawner::new(4, player.lock().unwrap().pos)));
+    let spawner = Arc::new(Mutex::new(Spawner::new(5, player.lock().unwrap().pos)));
 
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
@@ -46,15 +46,8 @@ fn main() {
 fn update(player: &mut user::Player, spawner: &mut Spawner) {
 
     // Check for attack collision
-
     for enemy in &mut spawner.enemies {
         if player.base_attack_collides(enemy.pos.0, enemy.pos.1) {
-            println!("ENEMY HIT");
-            println!("ENEMY HIT");
-            println!("ENEMY HIT");
-            println!("ENEMY HIT");
-            println!("ENEMY HIT");
-            println!("ENEMY HIT");
             enemy.take_damage(1);
         }
     }

@@ -29,9 +29,6 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
             if is_wall(row, col) {
                 render_str = "\x1b[33m█\x1b[0m";
             }
-            if player.collides(row, col) {
-                render_str = player.render();
-            }
             if player.base_attack_collides(row, col) {
                 render_str = player.render_base_attack();
             }
@@ -52,6 +49,9 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
                 }
             }
 
+            if player.collides(row, col) {
+                render_str = player.render();
+            }
             // Attach Output string to line string
             screen_output.push_str(render_str);
         }
