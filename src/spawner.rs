@@ -31,6 +31,11 @@ impl Spawner {
     }
 
     pub fn update_swarm(&mut self) {
+        // Check for deaths
+        self.enemies = self.enemies.clone().into_iter().filter(|enemy| enemy.get_health() <= 0).collect();
+
+        // Move swarm towards player
+        // TODO should avoid obstacles. should circle player (not group up into line)
         for enemy in &mut self.enemies {
             enemy.move_towards(self.player_pos);
         }

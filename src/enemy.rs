@@ -24,6 +24,10 @@ impl Enemy {
         }
     }
 
+    pub fn get_health(&self) -> u16 {
+        self.health
+    }
+
     pub fn render(&self) -> &str {
         "\x1b[92m%\x1b[0m"
     }
@@ -38,7 +42,7 @@ impl Enemy {
         if self.health > 0 {
             self.health -= dmg;
             if self.health == 0 {
-               println!("Enemy Dead");
+                println!("Enemy Dead");
             }
         }
     }
@@ -79,5 +83,15 @@ impl Enemy {
             }
         }
         false
+    }
+
+    fn clone(&self) -> Enemy {
+        Enemy {
+            id: self.id,
+            xp_rewards: self.xp_rewards,
+            health: self.health,
+            pos: self.pos,
+            last_updated: self.last_updated,
+        }
     }
 }

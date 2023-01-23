@@ -1,4 +1,4 @@
-use std::io::{stdout, Write};
+use std::{io::{stdout, Write}, mem::swap};
 use termion;
 use termion::raw::IntoRawMode;
 
@@ -42,6 +42,8 @@ pub fn render(player: &Player, spawner: &Spawner, do_render: bool) {
             }
         }
     }
+
+    screen_output.push_str(format!("Swarm Size: {:?}", spawner.enemies.len()).as_str()); 
 
     if do_render {
         //clearing the screen and going to top left corner
