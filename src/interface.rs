@@ -5,7 +5,7 @@ use std::{
 use termion;
 use termion::raw::IntoRawMode;
 
-use crate::{spawner::Spawner, user::Player, enemy::Enemy};
+use crate::{enemy::Enemy, spawner::Spawner, user::Player};
 
 fn is_wall(row: u16, col: u16) -> bool {
     let size = termion::terminal_size().unwrap();
@@ -23,40 +23,45 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
     let mut screen_output = String::from("");
     for row in 0..terminal_size.1 - 3 {
         for col in 0..terminal_size.0 {
+            let mut render_str = " ";
+
+            // Render Output, priority highest last.
             if is_wall(row, col) {
-                screen_output.push_str("\x1b[33m█\x1b[0m")
-            } else if player.collides(row, col) {
-                screen_output.push_str(player.render());
-            } else {
-                let mut enemy_rendered = false;
-                for enemy in &mut spawner.enemies {
-                    if enemy.collides(row, col) {
-                        if player.base_attack_collides(row, col) {
-                            enemy.take_damage(1);
-                            screen_output.push_str("\x1b[33m█\x1b[0m");
-                        } else {
-                            screen_output.push_str(enemy.render());
-                        }
-                        enemy_rendered = true;
-                        break;
-                    }
-                }
-                if !enemy_rendered && player.base_attack_collides(row, col) {
-                    screen_output.push_str(player.render_base_attack());
-                } else if !enemy_rendered {
-                    screen_output.push_str(" ");
+                render_str = "\x1b[33m█\x1b[0m";
+            }
+            if player.collides(row, col) {
+                render_str = player.render();
+            }
+            if player.base_attack_collides(row, col) {
+                render_str = player.render_base_attack();
+            }
+            for xp_orb in &spawner.experience_orbs {
+                if xp_orb.collides(row, col) {
+                   render_str = xp_orb.render();
+                   break;
                 }
             }
+            for enemy in &mut spawner.enemies {
+                if enemy.collides(row, col) {
+                        render_str = enemy.render();
+                    if player.base_attack_collides(row, col) {
+                        enemy.take_damage(1);
+                        render_str = "\x1b[33m█\x1b[0m";
+                    }
+                    break;
+                }
+            }
+
+            // Attach Output string to line string
+            screen_output.push_str(render_str);
         }
     }
+
+    screen_output.push_str("\x1b[30m>\x1b[0m \x1b[31mDungeon\x1b[0m \x1b[33mC\x1b[0m\x1b[32mL\x1b[0m\x1b[36mI\x1b[0m \x1b[30m$\x1b[0m");
+
     for enemy in &spawner.enemies {
         screen_output.push_str(format!(" : {:?} : ", enemy.get_health()).as_str());
     }
-
-    screen_output.push_str(
-        format!(
-            "Swarm Size: {:?} | {:?}", spawner.enemies.len(), spawner.enemies.clone().into_iter().filter(|enemy| enemy.get_health() > 0).collect::<Vec<Enemy>>()
-                ).as_str());
 
     if do_render {
         //clearing the screen and going to top left corner

@@ -6,7 +6,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug)]
 pub struct Enemy {
     id: Uuid,
-    xp_rewards: u16,
+    xp_rewards: u32,
     health: u16,
     pub pos: (u16, u16),
     last_updated: Instant,
@@ -26,17 +26,15 @@ impl Enemy {
         }
     }
 
-    pub fn get_health(&self) -> u16 {
-        self.health
-    }
+    pub fn get_health(&self) -> u16 { self.health }
+
+    pub fn get_xp_rewards(&self) -> u32 { self.xp_rewards }
 
     pub fn render(&self) -> &str {
-        "\x1b[92m%\x1b[0m"
+        "\x1b[31m%\x1b[0m"
     }
 
     pub fn collides(&self, row: u16, col: u16) -> bool {
-        // todo handle damage case where collision
-        // causes damage to enemy
         self.pos.0 == col && self.pos.1 == row
     }
 
@@ -44,9 +42,6 @@ impl Enemy {
         if self.health_updated.elapsed().as_millis() >= 350 {
             if self.health > 0 {
                 self.health -= dmg;
-                if self.health == 0 {
-                    println!("Enemy Dead");
-                }
                 self.health_updated = Instant::now();
             }
         }

@@ -5,8 +5,25 @@ use uuid::Uuid;
 
 use crate::enemy::Enemy;
 
+pub struct ExperienceOrb {
+    collected: bool,
+    amount: u32,
+    pos: (u16, u16),
+}
+
+impl ExperienceOrb {
+    pub fn collides(&self, row: u16, col: u16) -> bool {
+        self.pos.0 == col && self.pos.1 == row
+    }
+
+    pub fn render(&self) -> &str {
+        "\x1b[33m☠\x1b[0m"
+    }
+}
+
 pub struct Spawner {
     pub enemies: Vec<Enemy>,
+    pub experience_orbs: Vec<ExperienceOrb>,
     enemies_limit: u16,
     player_pos: (u16, u16),
 }
@@ -21,6 +38,7 @@ impl Spawner {
 
         Spawner {
             enemies,
+            experience_orbs: vec![],
             enemies_limit,
             player_pos,
         }
@@ -32,7 +50,27 @@ impl Spawner {
 
     pub fn update_swarm(&mut self) {
         // Check for deaths
-        self.enemies = self.enemies.clone().into_iter().filter(|enemy| enemy.get_health() > 0).collect();
+        let dead_enemies: Vec<Enemy> = self
+            .enemies
+            .clone()
+            .into_iter()
+            .filter(|enemy| enemy.get_health() <= 0)
+            .collect();
+
+        for dead_enemy in dead_enemies {
+            self.experience_orbs.push(ExperienceOrb {
+                collected: false,
+                amount: dead_enemy.get_xp_rewards(),
+                pos: dead_enemy.pos,
+            });
+        }
+
+        self.enemies = self
+            .enemies
+            .clone()
+            .into_iter()
+            .filter(|enemy| enemy.get_health() > 0)
+            .collect();
 
         // Move swarm towards player
         // TODO should avoid obstacles. should circle player (not group up into line)
