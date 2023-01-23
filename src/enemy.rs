@@ -3,13 +3,14 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::{thread::current, time::Instant};
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Enemy {
     id: Uuid,
     xp_rewards: u16,
     health: u16,
     pub pos: (u16, u16),
     last_updated: Instant,
+    health_updated: Instant,
 }
 
 impl Enemy {
@@ -21,6 +22,7 @@ impl Enemy {
             health: 3,
             pos: (rng.gen_range(2..70), rng.gen_range(2..70)),
             last_updated: Instant::now(),
+            health_updated: Instant::now(),
         }
     }
 
@@ -39,10 +41,13 @@ impl Enemy {
     }
 
     pub fn take_damage(&mut self, dmg: u16) {
-        if self.health > 0 {
-            self.health -= dmg;
-            if self.health == 0 {
-                println!("Enemy Dead");
+        if self.health_updated.elapsed().as_millis() >= 350 {
+            if self.health > 0 {
+                self.health -= dmg;
+                if self.health == 0 {
+                    println!("Enemy Dead");
+                }
+                self.health_updated = Instant::now();
             }
         }
     }
@@ -92,6 +97,7 @@ impl Enemy {
             health: self.health,
             pos: self.pos,
             last_updated: self.last_updated,
+            health_updated: self.health_updated,
         }
     }
 }

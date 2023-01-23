@@ -26,7 +26,7 @@ impl Player {
             speed: 1,
             marker: '&',
             vulnerable: true,
-            last_updated: Instant::now()
+            last_updated: Instant::now(),
         }
     }
 
@@ -44,7 +44,7 @@ impl Player {
 
     pub fn base_attack_collides(&self, row: u16, col: u16) -> bool {
         for a in &self.attack_pos {
-            if a.0 == col && a.1 == row {
+            if (a.0 + 1 == col || a.0 == col || a.0 - 1 == col) && (a.1 == row) {
                 return true;
             }
         }
@@ -56,8 +56,8 @@ impl Player {
         if self.last_updated.elapsed().as_millis() >= 200 {
             if self.attack_render_count >= 5 {
                 for (_i, el) in self.attack_pos.iter_mut().enumerate() {
-                  el.0 = self.pos.0;
-                  el.1 = self.pos.1;
+                    el.0 = self.pos.0;
+                    el.1 = self.pos.1;
                 }
                 self.attack_render_count = 0;
                 return;

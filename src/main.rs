@@ -36,7 +36,7 @@ fn main() {
         update(&mut player.lock().unwrap(), &mut spawner.lock().unwrap());
 
         // Render screen
-        render(&player.lock().unwrap(), &spawner.lock().unwrap(), do_render);
+        render(&player.lock().unwrap(), &mut spawner.lock().unwrap(), do_render);
     }
 }
 
@@ -49,6 +49,11 @@ fn update(player: &mut user::Player, spawner: &mut Spawner) {
 
     for enemy in &mut spawner.enemies {
         if player.base_attack_collides(enemy.pos.0, enemy.pos.1) {
+            println!("ENEMY HIT");
+            println!("ENEMY HIT");
+            println!("ENEMY HIT");
+            println!("ENEMY HIT");
+            println!("ENEMY HIT");
             println!("ENEMY HIT");
             enemy.take_damage(1);
         }
