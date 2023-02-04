@@ -31,7 +31,7 @@ impl Enemy {
     pub fn get_xp_rewards(&self) -> u32 { self.xp_rewards }
 
     pub fn render(&self) -> &str {
-        "\x1b[31m%\x1b[0m"
+        "\x1b[31mo̪\x1b[0m"
     }
 
     pub fn collides(&self, row: u16, col: u16) -> bool {

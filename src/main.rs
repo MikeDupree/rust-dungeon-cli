@@ -20,6 +20,7 @@ fn main() {
     // Spawn Input Thread
     let stdin_channel = spawn_stdin_channel();
 
+    // Main game loop
     loop {
         // Control Enemy Swarm
         let spawner_control_clone = Arc::clone(&spawner);
@@ -51,6 +52,14 @@ fn update(player: &mut user::Player, spawner: &mut Spawner) {
             enemy.take_damage(1);
         }
     }
+
+    // Check if player collides with experience orb
+    for experience_orb in &mut spawner.experience_orbs {
+        if experience_orb.collides(player.pos) {
+          player.collect_experience(experience_orb);
+        }
+    }
+
     player.update();
     spawner.update_swarm();
 }

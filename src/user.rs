@@ -1,11 +1,13 @@
 use std::time::Instant;
 use termion::event::Key;
 
+use crate::spawner::ExperienceOrb;
+
 // Player.rs
 #[derive(Debug)]
 pub struct Player {
     pub health: u16,
-    pub xp: u16,
+    pub xp: u32,
     pub speed: u16,
     pub pos: (u16, u16),
     pub attack_pos: Vec<(u16, u16)>,
@@ -39,7 +41,7 @@ impl Player {
     }
 
     pub fn render_base_attack(&self) -> &str {
-        "\u{001b}[37;1m•\u{001b}[0m"
+        "\u{001b}[37;1m➵\u{001b}[0m"
     }
 
     pub fn base_attack_collides(&self, row: u16, col: u16) -> bool {
@@ -93,5 +95,10 @@ impl Player {
             "r" => self.pos.0 += 1,
             _ => (),
         }
+    }
+
+    pub fn collect_experience(&mut self, experienceOrb: &mut ExperienceOrb){
+       self.xp += experienceOrb.get_amount();
+       experienceOrb.collect();
     }
 }

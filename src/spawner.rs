@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use crate::enemy::Enemy;
 
+#[derive(Clone)]
 pub struct ExperienceOrb {
     collected: bool,
     amount: u32,
@@ -12,12 +13,28 @@ pub struct ExperienceOrb {
 }
 
 impl ExperienceOrb {
-    pub fn collides(&self, row: u16, col: u16) -> bool {
-        self.pos.0 == col && self.pos.1 == row
+    pub fn collides(&self, pos: (u16, u16)) -> bool {
+        self.pos.0 == pos.0 && self.pos.1 == pos.1
     }
 
     pub fn render(&self) -> &str {
         "\x1b[33m☠\x1b[0m"
+    }
+
+    pub fn get_amount(&self) -> u32 {
+        self.amount
+    }
+
+    pub fn collect(&mut self) {
+        self.collected = true;
+    }
+
+    fn clone(&self) -> ExperienceOrb {
+        ExperienceOrb {
+            collected: self.collected,
+            amount: self.amount,
+            pos: self.pos,
+        }
     }
 }
 
@@ -49,6 +66,15 @@ impl Spawner {
     }
 
     pub fn update_swarm(&mut self) {
+        // Remove collected experience_orbs
+        let remaining_experience: Vec<ExperienceOrb> = self
+            .experience_orbs
+            .clone()
+            .into_iter()
+            .filter(|orb| !orb.collected)
+            .collect();
+        self.experience_orbs = remaining_experience;
+
         // Check for deaths
         let dead_enemies: Vec<Enemy> = self
             .enemies
@@ -57,12 +83,20 @@ impl Spawner {
             .filter(|enemy| enemy.get_health() <= 0)
             .collect();
 
+        // Spawn experience_orbs for each dead enemy
         for dead_enemy in dead_enemies {
             self.experience_orbs.push(ExperienceOrb {
                 collected: false,
                 amount: dead_enemy.get_xp_rewards(),
                 pos: dead_enemy.pos,
             });
+        }
+
+        // Spawn new enemies
+        if self.enemies.len() < 5 {
+            for _i in 0..5 - self.enemies.len() {
+                self.enemies.push(Enemy::new(Uuid::new_v4()));
+            }
         }
 
         self.enemies = self

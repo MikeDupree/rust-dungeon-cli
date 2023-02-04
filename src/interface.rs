@@ -1,6 +1,6 @@
 use std::{
     io::{stdout, Write},
-    mem::swap,
+    mem::swap, fmt::format,
 };
 use termion;
 use termion::raw::IntoRawMode;
@@ -27,13 +27,13 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
 
             // Render Output, priority highest last.
             if is_wall(row, col) {
-                render_str = "\x1b[33m█\x1b[0m";
+                render_str = "\x1b[30m█\x1b[0m";
             }
             if player.base_attack_collides(row, col) {
                 render_str = player.render_base_attack();
             }
             for xp_orb in &spawner.experience_orbs {
-                if xp_orb.collides(row, col) {
+                if xp_orb.collides((col, row)) {
                    render_str = xp_orb.render();
                    break;
                 }
@@ -43,7 +43,7 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
                         render_str = enemy.render();
                     if player.base_attack_collides(row, col) {
                         enemy.take_damage(1);
-                        render_str = "\x1b[33m█\x1b[0m";
+                        render_str = "\x1b[31moͯ\x1b[0m";
                     }
                     break;
                 }
@@ -59,6 +59,7 @@ pub fn render(player: &Player, spawner: &mut Spawner, do_render: bool) {
 
     screen_output.push_str("\x1b[30m>\x1b[0m \x1b[31mDungeon\x1b[0m \x1b[33mC\x1b[0m\x1b[32mL\x1b[0m\x1b[36mI\x1b[0m \x1b[30m$\x1b[0m");
 
+    screen_output.push_str(format!(" XP: {:?} ", player.xp).as_str());
     for enemy in &spawner.enemies {
         screen_output.push_str(format!(" : {:?} : ", enemy.get_health()).as_str());
     }
