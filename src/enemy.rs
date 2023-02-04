@@ -1,6 +1,5 @@
 use rand::Rng;
-use std::sync::mpsc::{Receiver, Sender};
-use std::{thread::current, time::Instant};
+use std::time::Instant;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -26,9 +25,13 @@ impl Enemy {
         }
     }
 
-    pub fn get_health(&self) -> u16 { self.health }
+    pub fn get_health(&self) -> u16 {
+        self.health
+    }
 
-    pub fn get_xp_rewards(&self) -> u32 { self.xp_rewards }
+    pub fn get_xp_rewards(&self) -> u32 {
+        self.xp_rewards
+    }
 
     pub fn render(&self) -> &str {
         "\x1b[31mo̪\x1b[0m"

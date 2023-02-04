@@ -37,7 +37,11 @@ fn main() {
         update(&mut player.lock().unwrap(), &mut spawner.lock().unwrap());
 
         // Render screen
-        render(&player.lock().unwrap(), &mut spawner.lock().unwrap(), do_render);
+        render(
+            &player.lock().unwrap(),
+            &mut spawner.lock().unwrap(),
+            do_render,
+        );
     }
 }
 
@@ -45,10 +49,12 @@ fn main() {
  * Game Update
  */
 fn update(player: &mut user::Player, spawner: &mut Spawner) {
-
-    // Check for attack collision
+    // Check for collisions with enemy
     for enemy in &mut spawner.enemies {
-        if player.base_attack_collides(enemy.pos.0, enemy.pos.1) {
+        if player.collides(enemy.pos.0, enemy.pos.1) {
+            player.take_damage(1);
+        }
+        if player.base_attack_collides(enemy.pos.0, enemy.pos.1, false) {
             enemy.take_damage(1);
         }
     }
@@ -56,11 +62,10 @@ fn update(player: &mut user::Player, spawner: &mut Spawner) {
     // Check if player collides with experience orb
     for experience_orb in &mut spawner.experience_orbs {
         if experience_orb.collides(player.pos) {
-          player.collect_experience(experience_orb);
+            player.collect_experience(experience_orb);
         }
     }
 
     player.update();
     spawner.update_swarm();
 }
-

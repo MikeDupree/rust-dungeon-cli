@@ -49,7 +49,7 @@ impl Spawner {
     pub fn new(enemies_limit: u16, player_pos: (u16, u16)) -> Spawner {
         // spawn enemies
         let mut enemies: Vec<Enemy> = vec![];
-        for n in 0..enemies_limit {
+        for _n in 0..enemies_limit {
             enemies.push(Enemy::new(Uuid::new_v4()));
         }
 
@@ -93,7 +93,7 @@ impl Spawner {
         }
 
         // Spawn new enemies
-        if self.enemies.len() < 5 {
+        if self.enemies.len() < self.enemies_limit as usize {
             for _i in 0..5 - self.enemies.len() {
                 self.enemies.push(Enemy::new(Uuid::new_v4()));
             }

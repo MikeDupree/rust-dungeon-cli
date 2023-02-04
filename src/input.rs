@@ -1,9 +1,9 @@
+use std::io::stdin;
+use std::sync::mpsc::channel;
 use std::sync::mpsc::TryRecvError;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::io::stdin;
-use std::sync::mpsc::{channel};
 use termion::event::Key;
 
 use termion;
